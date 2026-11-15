@@ -1,0 +1,128 @@
+# ==========================================================================
+# FLUTTER / DART / PUB
+# ==========================================================================
+.dart_tool/
+.flutter-plugins
+.flutter-plugins-dependencies
+.pub-cache/
+.pub/
+/build/
+/coverage/
+**/doc/api/
+lib/generated_plugin_registrant.dart
+
+# Symbolication e Obfuscation
+app.*.symbols
+app.*.map.json
+
+# ==========================================================================
+# SEGURANÇA E AMBIENTE (CRÍTICO)
+# ==========================================================================
+# Nunca commite arquivos de ambiente e chaves de loja
+*.env
+.env
+.env.*
+key.properties
+**/*.keystore
+**/*.jks
+android/app/key.jks
+credentials.json
+service_account.json
+google-services.json
+GoogleService-Info.plist
+
+# ==========================================================================
+# BANCOS DE DADOS LOCAIS
+# ==========================================================================
+# Ignora diretórios de dados locais (ObjectBox, Isar, Hive, SQLite) 
+# Nota: objectbox-model.json deve ser commitado, mas o diretório objectbox/ não.
+objectbox/
+*.db
+*.db-shm
+*.db-wal
+*.sqlite
+*.sqlite3
+
+# ==========================================================================
+# ANDROID
+# ==========================================================================
+**/android/app/debug/
+**/android/app/profile/
+**/android/app/release/
+**/android/.gradle/
+**/android/captures/
+**/android/gradlew
+**/android/gradlew.bat
+**/android/local.properties
+**/android/**/GeneratedPluginRegistrant.java
+
+# ==========================================================================
+# IOS & MACOS
+# ==========================================================================
+**/ios/Flutter/.last_build_id
+**/ios/Flutter/App.framework
+**/ios/Flutter/Flutter.framework
+**/ios/Flutter/Flutter.podspec
+**/ios/Flutter/Generated.xcconfig
+**/ios/Flutter/app.flx
+**/ios/Flutter/app.zip
+**/ios/Flutter/flutter_assets/
+**/ios/Flutter/flutter_export_environment.sh
+**/ios/ServiceDefinitions.json
+**/ios/Runner/GeneratedPluginRegistrant.*
+**/ios/Pods/
+**/ios/.symlinks/
+**/ios/**/*.xcuserdatad/
+**/ios/**/*.xcworkspace/xcuserdata/
+**/macOS/Flutter/GeneratedPluginRegistrant.swift
+**/macOS/Pods/
+**/macOS/**/*.xcuserdatad/
+
+# ==========================================================================
+# WINDOWS & LINUX (DESKTOP)
+# ==========================================================================
+**/windows/flutter/ephemeral/
+**/windows/flutter/generated_plugin_registrant.cc
+**/windows/CMakeLists.txt.user
+**/windows/AppPackages/
+**/windows/BundleArtifacts/
+*.msix
+*.exe
+**/linux/flutter/ephemeral/
+
+# ==========================================================================
+# SISTEMAS OPERACIONAIS
+# ==========================================================================
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+
+# ==========================================================================
+# IDEs E ARQUIVOS TEMPORÁRIOS
+# ==========================================================================
+# IntelliJ / Android Studio
+*.iml
+*.ipr
+*.iws
+.idea/
+
+# VS Code (Descomente .vscode/ se sua equipe usa configurações diferentes de launch/debug)
+#.vscode/
+.widget_preview/
+
+# Arquivos genéricos
+*.class
+*.log
+*.pyc
+*.swp
+.atom/
+.build/
+.buildlog/
+.history
+.svn/
+.swiftpm/
+migrate_working_dir/
