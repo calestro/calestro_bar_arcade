@@ -1,22 +1,17 @@
-
-
-
-
-
-import 'package:arcade_calestro_bar/enums/game_emulator.dart';
-
 class GameModel {
+  int id;
   String name;
-  String description;
-  String imageUrl;
-  String gameUrl;
-  GameEmulator emulator;
+  String coverPath;
+  String executablePath;
+  String arguments;
+  int emulatorIndex;
 
   GameModel({
+    this.id = 0,
     required this.name,
-    required this.description,
-    required this.imageUrl,
-    required this.gameUrl,
-    required this.emulator,
+    required this.coverPath,
+    required this.executablePath,
+    this.arguments = '',
+    this.emulatorIndex = 0,
   });
 }
