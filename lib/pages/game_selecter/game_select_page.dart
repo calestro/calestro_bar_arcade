@@ -2,6 +2,7 @@ import 'dart:math';
 import 'dart:io';
 
 import 'package:arcade_calestro_bar/pages/game_selecter/components/cylender_collum.dart';
+import 'package:arcade_calestro_bar/pages/game_selecter/components/cylinder_borders_painter.dart';
 import 'package:arcade_calestro_bar/pages/game_selecter/components/game_cover.dart';
 import 'package:flutter/material.dart';
 
@@ -43,39 +44,23 @@ class _GameSelectPageState extends State<GameSelectPage> {
         ),
         child: Stack(
           children: [
-            // 1. TOPO: Logo e Emulador
             Positioned(
-              top: screenHeight * 0.04,
-              left: 40,
-              right: 40,
+              top: screenHeight * 0.15,
+              left: 0,
+              right: 30,
               child: Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                crossAxisAlignment: CrossAxisAlignment.center,
                 children: [
                   SizedBox(
-                    height: screenHeight * 0.15,
-                    child: SizedBox.shrink(), //////////LOGO AQUI
-                  ),
-                  const Column(
-                    crossAxisAlignment: CrossAxisAlignment.end,
-                    children: [
-                      Text(
-                        "EMULADOR",
-                        style: TextStyle(
-                          color: Colors.orangeAccent,
-                          fontSize: 32,
-                          fontWeight: FontWeight.bold,
-                        ),
+                    height: screenHeight * 0.8,
+                    width: screenWidth * 0.5,
+                    child: CustomPaint(
+                      painter: const CylinderBordersPainter(
+                        rimHeight: 28,
+                        curvature: 18,
+                        showSideBorders: true,
                       ),
-                      Text(
-                        "MAME & WINDOWS",
-                        style: TextStyle(
-                          color: Colors.white70,
-                          fontSize: 18,
-                          letterSpacing: 2,
-                        ),
-                      ),
-                    ],
+                    ),
                   ),
                 ],
               ),
@@ -136,28 +121,6 @@ class _GameSelectPageState extends State<GameSelectPage> {
                     ),
                   ),
                 ],
-              ),
-            ),
-
-            Positioned(
-              bottom: 0,
-              left: 0,
-              right: 0,
-              child: Container(
-                height: screenHeight * 0.12,
-                decoration: const BoxDecoration(
-                  color: Color(0xFF1A1A1A),
-                  border: Border(
-                    top: BorderSide(color: Colors.orangeAccent, width: 3),
-                  ),
-                ),
-                child: Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                  children: [
-                   
-                   
-                  ],
-                ),
               ),
             ),
           ],
