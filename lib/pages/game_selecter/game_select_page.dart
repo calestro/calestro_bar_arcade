@@ -1,18 +1,14 @@
-import 'dart:math';
 import 'dart:io';
-
 import 'package:arcade_calestro_bar/pages/game_selecter/components/cylender_collum.dart';
 import 'package:arcade_calestro_bar/pages/game_selecter/components/cylinder_borders_painter.dart';
-import 'package:arcade_calestro_bar/pages/game_selecter/components/game_cover.dart';
 import 'package:flutter/material.dart';
-
 import 'controllers/game_select_controller.dart';
 import '../../models/game_model.dart';
 
 class GameSelectPage extends StatefulWidget {
   final GameSelectController controller;
 
-  const GameSelectPage({Key? key, required this.controller}) : super(key: key);
+  const GameSelectPage({super.key, required this.controller});
 
   @override
   State<GameSelectPage> createState() => _GameSelectPageState();
@@ -34,7 +30,6 @@ class _GameSelectPageState extends State<GameSelectPage> {
 
     return Scaffold(
       body: Container(
-        // Fundo escuro com leve gradiente
         decoration: const BoxDecoration(
           gradient: RadialGradient(
             center: Alignment.center,
@@ -65,7 +60,6 @@ class _GameSelectPageState extends State<GameSelectPage> {
                 ],
               ),
             ),
-
             Positioned(
               top: screenHeight * 0.22,
               bottom: screenHeight * 0.15,
@@ -73,7 +67,6 @@ class _GameSelectPageState extends State<GameSelectPage> {
               right: 0,
               child: Row(
                 children: [
-                  // ESQUERDA: Cilindro 3D
                   Expanded(
                     flex: 1,
                     child: RawKeyboardListener(
@@ -84,38 +77,45 @@ class _GameSelectPageState extends State<GameSelectPage> {
                         builder: (context, child) {
                           if (widget.controller.columns.isEmpty) {
                             return const Center(
-                              child: CircularProgressIndicator(
-                                color: Colors.orange,
-                              ),
+                              child: CircularProgressIndicator(color: Colors.orange),
                             );
                           }
-                          return PageView.builder(
-                            controller: widget.controller.pageController,
-                            physics: const NeverScrollableScrollPhysics(),
-                            itemCount: widget.controller.columns.length,
-                            itemBuilder: (context, colIndex) {
-                              return CylinderColumn(
-                                colIndex: colIndex,
-                                controller: widget.controller, // ou a variável que contém seu controller
-                              );
-                            },
+                          return Stack(
+                            alignment: Alignment.center,
+                            children: [
+                              Positioned.fill(
+                                child: Opacity(
+                                  opacity: 0.0,
+                                  child: PageView.builder(
+                                    controller: widget.controller.pageController,
+                                    physics: const NeverScrollableScrollPhysics(),
+                                    itemBuilder: (context, index) => const SizedBox.shrink(),
+                                  ),
+                                ),
+                              ),
+                              ...List.generate(
+                                widget.controller.columns.length,
+                                (colIndex) => CylinderColumn(
+                                  colIndex: colIndex,
+                                  controller: widget.controller,
+                                ),
+                              ),
+                            ],
                           );
                         },
                       ),
                     ),
                   ),
-
                   Expanded(
                     flex: 1,
                     child: AnimatedBuilder(
                       animation: widget.controller,
                       builder: (context, child) {
-                        if (widget.controller.columns.isEmpty)
+                        if (widget.controller.columns.isEmpty) {
                           return const SizedBox.shrink();
-                        final selectedGame =
-                            widget.controller.columns[widget
-                                .controller
-                                .currentColumn][widget.controller.currentRow];
+                        }
+                        final int realColIndex = widget.controller.currentColumn % widget.controller.columns.length;
+                        final selectedGame = widget.controller.columns[realColIndex][widget.controller.currentRow];
                         return _buildRightPanel(selectedGame, screenHeight);
                       },
                     ),
@@ -144,16 +144,8 @@ class _GameSelectPageState extends State<GameSelectPage> {
               borderRadius: BorderRadius.circular(24),
               border: Border.all(color: Colors.grey.shade800, width: 8),
               boxShadow: const [
-                BoxShadow(
-                  color: Colors.black54,
-                  blurRadius: 20,
-                  spreadRadius: 5,
-                ),
-                BoxShadow(
-                  color: Colors.blueAccent,
-                  blurRadius: 40,
-                  spreadRadius: -10,
-                ), // Brilho interno simulando tela
+                BoxShadow(color: Colors.black54, blurRadius: 20, spreadRadius: 5),
+                BoxShadow(color: Colors.blueAccent, blurRadius: 40, spreadRadius: -10),
               ],
             ),
             child: Stack(
@@ -161,18 +153,12 @@ class _GameSelectPageState extends State<GameSelectPage> {
               children: [
                 ClipRRect(
                   borderRadius: BorderRadius.circular(16),
-                  child:
-                      game.coverPath != 'NO_image' &&
-                          File(game.coverPath).existsSync()
+                  child: game.coverPath != 'NO_image' && File(game.coverPath).existsSync()
                       ? Image.file(File(game.coverPath), fit: BoxFit.cover)
                       : Container(
                           color: Colors.grey[900],
                           child: const Center(
-                            child: Icon(
-                              Icons.videogame_asset,
-                              size: 80,
-                              color: Colors.white24,
-                            ),
+                            child: Icon(Icons.videogame_asset, size: 80, color: Colors.white24),
                           ),
                         ),
                 ),
@@ -182,10 +168,7 @@ class _GameSelectPageState extends State<GameSelectPage> {
                     gradient: LinearGradient(
                       begin: Alignment.topCenter,
                       end: Alignment.bottomCenter,
-                      colors: [
-                        Colors.white.withOpacity(0.05),
-                        Colors.transparent,
-                      ],
+                      colors: [Colors.white.withOpacity(0.05), Colors.transparent],
                       stops: const [0.0, 1.0],
                     ),
                   ),
@@ -194,33 +177,13 @@ class _GameSelectPageState extends State<GameSelectPage> {
             ),
           ),
           const SizedBox(height: 30),
-          Text(
-            game.name,
-            style: const TextStyle(
-              color: Colors.white,
-              fontSize: 36,
-              fontWeight: FontWeight.bold,
-            ),
-          ),
+          Text(game.name, style: const TextStyle(color: Colors.white, fontSize: 36, fontWeight: FontWeight.bold)),
           const SizedBox(height: 15),
-          const Text(
-            "Jogadores: 2",
-            style: TextStyle(color: Colors.white70, fontSize: 22),
-          ),
+          const Text("Jogadores: 2", style: TextStyle(color: Colors.white70, fontSize: 22)),
           const SizedBox(height: 5),
-          const Text(
-            "Lançamento: 1991 - Capcom",
-            style: TextStyle(color: Colors.white70, fontSize: 22),
-          ),
+          const Text("Lançamento: 1991 - Capcom", style: TextStyle(color: Colors.white70, fontSize: 22)),
           const SizedBox(height: 5),
-          const Text(
-            "Gênero: Luta",
-            style: TextStyle(
-              color: Colors.orangeAccent,
-              fontSize: 22,
-              fontWeight: FontWeight.bold,
-            ),
-          ),
+          const Text("Gênero: Luta", style: TextStyle(color: Colors.orangeAccent, fontSize: 22, fontWeight: FontWeight.bold)),
         ],
       ),
     );

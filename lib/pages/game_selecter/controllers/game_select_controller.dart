@@ -4,15 +4,20 @@ import '../../../models/game_model.dart';
 import '../../../enums/game_emulator.dart';
 
 class GameSelectController extends ChangeNotifier {
-  final PageController pageController = PageController(viewportFraction: 0.35);
+  late final PageController pageController;
   final FocusNode focusNode = FocusNode();
 
   List<List<GameModel>> columns = [];
-  int currentColumn = 0;
+  int currentColumn = 1000;
   int currentRow = 1; 
   final int rowsPerColumn = 3;
 
-  // Função temporária para testar a UI sem o ObjectBox
+
+  GameSelectController() {
+    pageController = PageController(initialPage: currentColumn, viewportFraction: 0.3);
+    loadMockGames(); // Carrega jogos de teste
+  }
+
   void loadMockGames() {
     final mockGames = [
       GameModel(id: 1, name: 'Sega Rally', coverPath: 'NO_image', executablePath: 'C:\\Games\\sega.exe'),
@@ -42,34 +47,27 @@ class GameSelectController extends ChangeNotifier {
     notifyListeners();
     focusNode.requestFocus();
   }
-
-  void handleKeyEvent(RawKeyEvent event) {
-    if (event is! RawKeyDownEvent) return;
-
-    final key = event.logicalKey;
-
-    if (key == LogicalKeyboardKey.arrowLeft) {
-      if (currentColumn > 0) {
-        currentColumn--;
-        _animateToColumn();
-      }
-    } else if (key == LogicalKeyboardKey.arrowRight) {
-      if (currentColumn < columns.length - 1) {
+void handleKeyEvent(RawKeyEvent event) {
+    if (event is RawKeyDownEvent) {
+      if (event.logicalKey == LogicalKeyboardKey.arrowRight) {
         currentColumn++;
-        _animateToColumn();
-      }
-    } else if (key == LogicalKeyboardKey.arrowUp) {
-      if (currentRow > 0) {
-        currentRow--;
+        pageController.animateToPage(
+          currentColumn,
+          duration: const Duration(milliseconds: 300),
+          curve: Curves.easeOut,
+        );
         notifyListeners();
       }
-    } else if (key == LogicalKeyboardKey.arrowDown) {
-      if (currentRow < columns[currentColumn].length - 1) {
-        currentRow++;
+
+      if (event.logicalKey == LogicalKeyboardKey.arrowLeft) {
+        currentColumn--;
+        pageController.animateToPage(
+          currentColumn,
+          duration: const Duration(milliseconds: 300),
+          curve: Curves.easeOut,
+        );
         notifyListeners();
       }
-    } else if (key == LogicalKeyboardKey.enter || key == LogicalKeyboardKey.gameButtonA) {
-      _launchSelectedGame();
     }
   }
 

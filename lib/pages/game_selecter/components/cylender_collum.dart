@@ -1,12 +1,11 @@
-import 'dart:math' as math; // Necessário para o math.cos()
+import 'dart:math' as math;
 import 'package:arcade_calestro_bar/pages/game_selecter/components/game_cover.dart';
 import 'package:arcade_calestro_bar/pages/game_selecter/controllers/game_select_controller.dart';
 import 'package:flutter/material.dart';
 
 class CylinderColumn extends StatelessWidget {
   final int colIndex;
-
-  final GameSelectController controller; 
+  final GameSelectController controller;
 
   const CylinderColumn({
     super.key,
@@ -19,11 +18,21 @@ class CylinderColumn extends StatelessWidget {
     return AnimatedBuilder(
       animation: controller.pageController,
       builder: (context, child) {
-        double value = 0.0;
-        if (controller.pageController.position.haveDimensions) {
-          value = controller.pageController.page! - colIndex;
-        } else {
-          value = (controller.currentColumn - colIndex).toDouble();
+        final int totalColumns = controller.columns.length;
+        if (totalColumns == 0) return const SizedBox.shrink();
+
+        double page = controller.currentColumn.toDouble();
+        if (controller.pageController.hasClients && controller.pageController.position.haveDimensions) {
+          page = controller.pageController.page ?? page;
+        }
+
+        double value = (page - colIndex) % totalColumns;
+        final double half = totalColumns / 2;
+        
+        if (value > half) {
+          value -= totalColumns;
+        } else if (value < -half) {
+          value += totalColumns;
         }
 
         final double angle = value * 0.70;
@@ -34,13 +43,18 @@ class CylinderColumn extends StatelessWidget {
           ..rotateY(angle)
           ..translate(0.0, 0.0, -radius * (1 - math.cos(angle).abs()));
 
-        final bool isCurrentColumn = colIndex == controller.currentColumn;
+        final bool isCurrentColumn = colIndex == (controller.currentColumn % totalColumns);
+        final double opacity = (1 - value.abs() * 0.5).clamp(0.0, 1.0);
+
+        if (opacity <= 0.0 || value.abs() > 2.0) {
+          return const SizedBox.shrink();
+        }
 
         return Transform(
           transform: transform,
           alignment: FractionalOffset.center,
           child: Opacity(
-            opacity: (1 - value.abs() * 0.5).clamp(0.2, 1.0),
+            opacity: opacity,
             child: Column(
               mainAxisAlignment: MainAxisAlignment.center,
               mainAxisSize: MainAxisSize.min,
@@ -48,10 +62,8 @@ class CylinderColumn extends StatelessWidget {
                 controller.columns[colIndex].length,
                 (rowIndex) {
                   final game = controller.columns[colIndex][rowIndex];
-                  final bool isSelected =
-                      isCurrentColumn && rowIndex == controller.currentRow;
-                  
-                  // Aqui ele chama o widget GameCover que transformamos na pergunta anterior
+                  final bool isSelected = isCurrentColumn && rowIndex == controller.currentRow;
+
                   return GameCover(
                     game: game,
                     isSelected: isSelected,
