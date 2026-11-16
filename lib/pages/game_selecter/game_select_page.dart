@@ -41,18 +41,18 @@ class _GameSelectPageState extends State<GameSelectPage> {
           children: [
             Positioned(
               top: screenHeight * 0.15,
-              left: 0,
+              left: 200,
               right: 30,
               child: Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
                   SizedBox(
                     height: screenHeight * 0.8,
-                    width: screenWidth * 0.5,
+                    width: screenWidth * 0.28,
                     child: CustomPaint(
                       painter: const CylinderBordersPainter(
                         rimHeight: 28,
-                        curvature: 18,
+                        curvature: 20,
                         showSideBorders: true,
                       ),
                     ),
@@ -80,6 +80,35 @@ class _GameSelectPageState extends State<GameSelectPage> {
                               child: CircularProgressIndicator(color: Colors.orange),
                             );
                           }
+
+                          double page = widget.controller.currentColumn.toDouble();
+                          if (widget.controller.pageController.hasClients && 
+                              widget.controller.pageController.position.haveDimensions) {
+                            page = widget.controller.pageController.page ?? page;
+                          }
+
+                          final int totalCols = widget.controller.columns.length;
+                          
+                          List sortedColumns = List.generate(totalCols, (colIndex) {
+                            double value = (page - colIndex) % totalCols;
+                            double half = totalCols / 2;
+                            if (value > half) {
+                              value -= totalCols;
+                            } else if (value < -half) {
+                              value += totalCols;
+                            }
+                            
+                            return {
+                              'distance': value.abs(),
+                              'widget': CylinderColumn(
+                                colIndex: colIndex,
+                                controller: widget.controller,
+                              )
+                            };
+                          });
+
+                          sortedColumns.sort((a, b) => b['distance'].compareTo(a['distance']));
+
                           return Stack(
                             alignment: Alignment.center,
                             children: [
@@ -88,18 +117,13 @@ class _GameSelectPageState extends State<GameSelectPage> {
                                   opacity: 0.0,
                                   child: PageView.builder(
                                     controller: widget.controller.pageController,
-                                    physics: const NeverScrollableScrollPhysics(),
+                                    onPageChanged: widget.controller.updateColumnFromScroll,
+                                    physics: const BouncingScrollPhysics(),
                                     itemBuilder: (context, index) => const SizedBox.shrink(),
                                   ),
                                 ),
                               ),
-                              ...List.generate(
-                                widget.controller.columns.length,
-                                (colIndex) => CylinderColumn(
-                                  colIndex: colIndex,
-                                  controller: widget.controller,
-                                ),
-                              ),
+                              ...sortedColumns.map((item) => item['widget'] as Widget),
                             ],
                           );
                         },
@@ -115,7 +139,13 @@ class _GameSelectPageState extends State<GameSelectPage> {
                           return const SizedBox.shrink();
                         }
                         final int realColIndex = widget.controller.currentColumn % widget.controller.columns.length;
-                        final selectedGame = widget.controller.columns[realColIndex][widget.controller.currentRow];
+                        
+                        int safeRow = widget.controller.currentRow;
+                        if (safeRow >= widget.controller.columns[realColIndex].length) {
+                          safeRow = widget.controller.columns[realColIndex].length - 1;
+                        }
+
+                        final selectedGame = widget.controller.columns[realColIndex][safeRow];
                         return _buildRightPanel(selectedGame, screenHeight);
                       },
                     ),

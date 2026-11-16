@@ -8,14 +8,13 @@ class GameSelectController extends ChangeNotifier {
   final FocusNode focusNode = FocusNode();
 
   List<List<GameModel>> columns = [];
-  int currentColumn = 1000;
-  int currentRow = 1; 
+  int currentColumn = 10000;
+  int currentRow = 0;
   final int rowsPerColumn = 3;
-
 
   GameSelectController() {
     pageController = PageController(initialPage: currentColumn, viewportFraction: 0.3);
-    loadMockGames(); // Carrega jogos de teste
+    loadMockGames();
   }
 
   void loadMockGames() {
@@ -47,27 +46,43 @@ class GameSelectController extends ChangeNotifier {
     notifyListeners();
     focusNode.requestFocus();
   }
-void handleKeyEvent(RawKeyEvent event) {
-    if (event is RawKeyDownEvent) {
-      if (event.logicalKey == LogicalKeyboardKey.arrowRight) {
-        currentColumn++;
-        pageController.animateToPage(
-          currentColumn,
-          duration: const Duration(milliseconds: 300),
-          curve: Curves.easeOut,
-        );
-        notifyListeners();
-      }
 
-      if (event.logicalKey == LogicalKeyboardKey.arrowLeft) {
+  void handleKeyEvent(RawKeyEvent event) {
+    if (event is RawKeyDownEvent) {
+      if (columns.isEmpty) return;
+
+      final int totalColumns = columns.length;
+      final int realColIndex = currentColumn % totalColumns;
+
+      // Inversão das teclas para acompanhar o efeito 3D
+      if (event.logicalKey == LogicalKeyboardKey.arrowRight) {
         currentColumn--;
-        pageController.animateToPage(
-          currentColumn,
-          duration: const Duration(milliseconds: 300),
-          curve: Curves.easeOut,
-        );
-        notifyListeners();
+        _adjustRow();
+        _animateToColumn();
+      } else if (event.logicalKey == LogicalKeyboardKey.arrowLeft) {
+        currentColumn++;
+        _adjustRow();
+        _animateToColumn();
+      } else if (event.logicalKey == LogicalKeyboardKey.arrowDown) {
+        if (currentRow < columns[realColIndex].length - 1) {
+          currentRow++;
+          notifyListeners();
+        }
+      } else if (event.logicalKey == LogicalKeyboardKey.arrowUp) {
+        if (currentRow > 0) {
+          currentRow--;
+          notifyListeners();
+        }
+      } else if (event.logicalKey == LogicalKeyboardKey.enter || event.logicalKey == LogicalKeyboardKey.space) {
+        _launchSelectedGame();
       }
+    }
+  }
+
+  void _adjustRow() {
+    int realCol = currentColumn % columns.length;
+    if (currentRow >= columns[realCol].length) {
+      currentRow = columns[realCol].length - 1;
     }
   }
 
@@ -80,8 +95,17 @@ void handleKeyEvent(RawKeyEvent event) {
     notifyListeners();
   }
 
+  void updateColumnFromScroll(int index) {
+    if (currentColumn != index) {
+      currentColumn = index;
+      _adjustRow();
+      notifyListeners();
+    }
+  }
+
   void _launchSelectedGame() {
-    final selectedGame = columns[currentColumn][currentRow];
+    int realCol = currentColumn % columns.length;
+    final selectedGame = columns[realCol][currentRow];
     debugPrint("A iniciar o jogo: ${selectedGame.name}");
   }
 
