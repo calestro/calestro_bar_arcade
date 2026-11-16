@@ -1,7 +1,9 @@
 import 'dart:io';
+
 import 'package:arcade_calestro_bar/pages/game_selecter/components/cylender_collum.dart';
 import 'package:arcade_calestro_bar/pages/game_selecter/components/cylinder_borders_painter.dart';
 import 'package:flutter/material.dart';
+
 import 'controllers/game_select_controller.dart';
 import '../../models/game_model.dart';
 
@@ -15,6 +17,11 @@ class GameSelectPage extends StatefulWidget {
 }
 
 class _GameSelectPageState extends State<GameSelectPage> {
+  // Medidas do cilindro (moldura e capas compartilham a mesma caixa)
+  static const double _cylinderLeft = 100;
+  static const double _rimHeight = 28;
+  static const double _curvature = 20;
+
   @override
   void initState() {
     super.initState();
@@ -25,8 +32,13 @@ class _GameSelectPageState extends State<GameSelectPage> {
 
   @override
   Widget build(BuildContext context) {
-    final screenHeight = MediaQuery.of(context).size.height;
-    final screenWidth = MediaQuery.of(context).size.width;
+    final size = MediaQuery.of(context).size;
+    final screenHeight = size.height;
+    final screenWidth = size.width;
+
+    final double cylinderWidth = screenWidth * 0.35;
+    final double cylinderHeight = screenHeight * 0.75;
+    final double cylinderTop = screenHeight * 0.15;
 
     return Scaffold(
       body: Container(
@@ -39,122 +51,143 @@ class _GameSelectPageState extends State<GameSelectPage> {
         ),
         child: Stack(
           children: [
+            // ---------------------------------------------------------------
+            // CILINDRO: moldura metálica + capas dentro da MESMA caixa,
+            // assim o centro das capas é sempre o centro do cilindro.
+            // ---------------------------------------------------------------
             Positioned(
-              top: screenHeight * 0.15,
-              left: 200,
-              right: 30,
-              child: Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              top: cylinderTop,
+              left: _cylinderLeft,
+              width: cylinderWidth *.7,
+              height: cylinderHeight,
+              child: Stack(
                 children: [
-                  SizedBox(
-                    height: screenHeight * 0.8,
-                    width: screenWidth * 0.28,
+                  const Positioned.fill(
                     child: CustomPaint(
-                      painter: const CylinderBordersPainter(
-                        rimHeight: 28,
-                        curvature: 20,
+                      painter: CylinderBordersPainter(
+                        rimHeight: _rimHeight,
+                        curvature: _curvature,
                         showSideBorders: true,
                       ),
                     ),
                   ),
-                ],
-              ),
-            ),
-            Positioned(
-              top: screenHeight * 0.22,
-              bottom: screenHeight * 0.15,
-              left: 0,
-              right: 0,
-              child: Row(
-                children: [
-                  Expanded(
-                    flex: 1,
-                    child: RawKeyboardListener(
-                      focusNode: widget.controller.focusNode,
-                      onKey: widget.controller.handleKeyEvent,
-                      child: AnimatedBuilder(
-                        animation: widget.controller,
-                        builder: (context, child) {
-                          if (widget.controller.columns.isEmpty) {
-                            return const Center(
-                              child: CircularProgressIndicator(color: Colors.orange),
-                            );
-                          }
-
-                          double page = widget.controller.currentColumn.toDouble();
-                          if (widget.controller.pageController.hasClients && 
-                              widget.controller.pageController.position.haveDimensions) {
-                            page = widget.controller.pageController.page ?? page;
-                          }
-
-                          final int totalCols = widget.controller.columns.length;
-                          
-                          List sortedColumns = List.generate(totalCols, (colIndex) {
-                            double value = (page - colIndex) % totalCols;
-                            double half = totalCols / 2;
-                            if (value > half) {
-                              value -= totalCols;
-                            } else if (value < -half) {
-                              value += totalCols;
-                            }
-                            
-                            return {
-                              'distance': value.abs(),
-                              'widget': CylinderColumn(
-                                colIndex: colIndex,
-                                controller: widget.controller,
-                              )
-                            };
-                          });
-
-                          sortedColumns.sort((a, b) => b['distance'].compareTo(a['distance']));
-
-                          return Stack(
-                            alignment: Alignment.center,
-                            children: [
-                              Positioned.fill(
-                                child: Opacity(
-                                  opacity: 0.0,
-                                  child: PageView.builder(
-                                    controller: widget.controller.pageController,
-                                    onPageChanged: widget.controller.updateColumnFromScroll,
-                                    physics: const BouncingScrollPhysics(),
-                                    itemBuilder: (context, index) => const SizedBox.shrink(),
-                                  ),
-                                ),
-                              ),
-                              ...sortedColumns.map((item) => item['widget'] as Widget),
-                            ],
-                          );
-                        },
+                  Positioned.fill(
+                    child: Padding(
+                      // mantém as capas entre o aro de cima e o de baixo
+                      padding: const EdgeInsets.symmetric(
+                        vertical: _curvature + _rimHeight * 1.1,
+                        horizontal: 6,
+                      ),
+                      child: ClipRect(
+                        child: _buildCylinderContent(cylinderWidth),
                       ),
                     ),
                   ),
-                  Expanded(
-                    flex: 1,
-                    child: AnimatedBuilder(
-                      animation: widget.controller,
-                      builder: (context, child) {
-                        if (widget.controller.columns.isEmpty) {
-                          return const SizedBox.shrink();
-                        }
-                        final int realColIndex = widget.controller.currentColumn % widget.controller.columns.length;
-                        
-                        int safeRow = widget.controller.currentRow;
-                        if (safeRow >= widget.controller.columns[realColIndex].length) {
-                          safeRow = widget.controller.columns[realColIndex].length - 1;
-                        }
-
-                        final selectedGame = widget.controller.columns[realColIndex][safeRow];
-                        return _buildRightPanel(selectedGame, screenHeight);
-                      },
-                    ),
-                  ),
                 ],
+              ),
+            ),
+
+            // ---------------------------------------------------------------
+            // PAINEL DIREITO
+            // ---------------------------------------------------------------
+            Positioned(
+              top: screenHeight * 0.2,
+              bottom: screenHeight * 0.15,
+              left: _cylinderLeft + cylinderWidth,
+              right: 0,
+              child: AnimatedBuilder(
+                animation: widget.controller,
+                builder: (context, child) {
+                  final c = widget.controller;
+                  if (c.columns.isEmpty) return const SizedBox.shrink();
+
+                  final int realColIndex = c.currentColumn % c.columns.length;
+                  final col = c.columns[realColIndex];
+                  final int safeRow =
+                      c.currentRow >= col.length ? col.length - 1 : c.currentRow;
+
+                  return _buildRightPanel(col[safeRow], screenHeight);
+                },
+              ),
+            ),
+
+            // ---------------------------------------------------------------
+            // LOGO centralizada acima do cilindro
+            // ---------------------------------------------------------------
+            Positioned(
+              top: -screenHeight * .11,
+              left: _cylinderLeft *.25,
+              width: cylinderWidth,
+              child: Center(
+                child: SizedBox(
+                  width: cylinderWidth * 0.7,
+                  height: size.height * 0.4,
+                  child: Image.asset(
+                    'assets/logo_small.png',
+                    fit: BoxFit.contain,
+                  ),
+                ),
               ),
             ),
           ],
         ),
+      ),
+    );
+  }
+
+  /// Colunas 3D + captura de teclado + PageView invisível (scroll/arrastar)
+  Widget _buildCylinderContent(double cylinderWidth) {
+    return RawKeyboardListener(
+      focusNode: widget.controller.focusNode,
+      onKey: widget.controller.handleKeyEvent,
+      child: AnimatedBuilder(
+        animation: widget.controller,
+        builder: (context, child) {
+          final c = widget.controller;
+
+          if (c.columns.isEmpty) {
+            return const Center(
+              child: CircularProgressIndicator(color: Colors.orange),
+            );
+          }
+
+          final int totalCols = c.columns.length;
+
+          // A página anima sozinha até a coluna atual. Mudar só a linha
+          // (cima/baixo) não altera o destino, então não anima nada.
+          return TweenAnimationBuilder<double>(
+            tween: Tween<double>(end: c.currentColumn.toDouble()),
+            duration: const Duration(milliseconds: 300),
+            curve: Curves.easeOut,
+            builder: (context, page, _) {
+              // distância (sem sinal) de cada coluna até a central
+              double distanceTo(int i) {
+                double v = (i - page) % totalCols;
+                if (v > totalCols / 2) v -= totalCols;
+                if (v < -totalCols / 2) v += totalCols;
+                return v.abs();
+              }
+
+              // quem está mais longe é pintado primeiro; a central fica por cima
+              final order = List<int>.generate(totalCols, (i) => i)
+                ..sort((a, b) => distanceTo(b).compareTo(distanceTo(a)));
+
+              return Stack(
+                alignment: Alignment.center,
+                children: [
+                  for (final i in order)
+                    CylinderColumn(
+                      key: ValueKey(i),
+                      colIndex: i,
+                      controller: c,
+                      page: page,
+                      screenWidth: cylinderWidth,
+                    ),
+                ],
+              );
+            },
+          );
+        },
       ),
     );
   }
@@ -174,8 +207,16 @@ class _GameSelectPageState extends State<GameSelectPage> {
               borderRadius: BorderRadius.circular(24),
               border: Border.all(color: Colors.grey.shade800, width: 8),
               boxShadow: const [
-                BoxShadow(color: Colors.black54, blurRadius: 20, spreadRadius: 5),
-                BoxShadow(color: Colors.blueAccent, blurRadius: 40, spreadRadius: -10),
+                BoxShadow(
+                  color: Colors.black54,
+                  blurRadius: 20,
+                  spreadRadius: 5,
+                ),
+                BoxShadow(
+                  color: Colors.blueAccent,
+                  blurRadius: 40,
+                  spreadRadius: -10,
+                ),
               ],
             ),
             child: Stack(
@@ -183,12 +224,17 @@ class _GameSelectPageState extends State<GameSelectPage> {
               children: [
                 ClipRRect(
                   borderRadius: BorderRadius.circular(16),
-                  child: game.coverPath != 'NO_image' && File(game.coverPath).existsSync()
+                  child: game.coverPath != 'NO_image' &&
+                          File(game.coverPath).existsSync()
                       ? Image.file(File(game.coverPath), fit: BoxFit.cover)
                       : Container(
                           color: Colors.grey[900],
                           child: const Center(
-                            child: Icon(Icons.videogame_asset, size: 80, color: Colors.white24),
+                            child: Icon(
+                              Icons.videogame_asset,
+                              size: 80,
+                              color: Colors.white24,
+                            ),
                           ),
                         ),
                 ),
@@ -198,7 +244,10 @@ class _GameSelectPageState extends State<GameSelectPage> {
                     gradient: LinearGradient(
                       begin: Alignment.topCenter,
                       end: Alignment.bottomCenter,
-                      colors: [Colors.white.withOpacity(0.05), Colors.transparent],
+                      colors: [
+                        Colors.white.withOpacity(0.05),
+                        Colors.transparent,
+                      ],
                       stops: const [0.0, 1.0],
                     ),
                   ),
@@ -207,13 +256,33 @@ class _GameSelectPageState extends State<GameSelectPage> {
             ),
           ),
           const SizedBox(height: 30),
-          Text(game.name, style: const TextStyle(color: Colors.white, fontSize: 36, fontWeight: FontWeight.bold)),
+          Text(
+            game.name,
+            style: const TextStyle(
+              color: Colors.white,
+              fontSize: 36,
+              fontWeight: FontWeight.bold,
+            ),
+          ),
           const SizedBox(height: 15),
-          const Text("Jogadores: 2", style: TextStyle(color: Colors.white70, fontSize: 22)),
+          const Text(
+            "Jogadores: 2",
+            style: TextStyle(color: Colors.white70, fontSize: 22),
+          ),
           const SizedBox(height: 5),
-          const Text("Lançamento: 1991 - Capcom", style: TextStyle(color: Colors.white70, fontSize: 22)),
+          const Text(
+            "Lançamento: 1991 - Capcom",
+            style: TextStyle(color: Colors.white70, fontSize: 22),
+          ),
           const SizedBox(height: 5),
-          const Text("Gênero: Luta", style: TextStyle(color: Colors.orangeAccent, fontSize: 22, fontWeight: FontWeight.bold)),
+          const Text(
+            "Gênero: Luta",
+            style: TextStyle(
+              color: Colors.orangeAccent,
+              fontSize: 22,
+              fontWeight: FontWeight.bold,
+            ),
+          ),
         ],
       ),
     );

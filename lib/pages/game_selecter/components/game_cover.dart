@@ -15,7 +15,7 @@ class GameCover extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final bool hasValidImage =
-        game.coverPath != 'NO_image' && File(game.coverPath).existsSync();
+        game.coverPath != 'NO_image';
     final double screenHeight = MediaQuery.of(context).size.height;
 
     // REDUZIMOS AS PERCENTAGENS AQUI:
@@ -61,7 +61,7 @@ class GameCover extends StatelessWidget {
           fit: StackFit.expand,
           children: [
             hasValidImage
-                ? Image.file(File(game.coverPath), fit: BoxFit.cover)
+                ? Image.file(File(game.getCoverPath()), fit: BoxFit.cover)
                 : Container(
                     color: Colors.grey[900],
                     child: const Icon(Icons.image_not_supported,

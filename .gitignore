@@ -10,7 +10,7 @@
 /coverage/
 **/doc/api/
 lib/generated_plugin_registrant.dart
-
+.vscode/
 # Symbolication e Obfuscation
 app.*.symbols
 app.*.map.json
